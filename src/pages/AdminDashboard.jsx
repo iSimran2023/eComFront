@@ -20,6 +20,10 @@ const AdminDashboard = () => {
     isFeatured: false,
   });
   const [imageFile, setImageFile] = useState(null);
+  const [settings, setSettings] = useState({
+    deliveryInsideValley: 50,
+    deliveryOutsideValley: 150,
+  });
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const token = localStorage.getItem("token");
@@ -42,10 +46,17 @@ const AdminDashboard = () => {
       if (activeTab === "orders") {
         const res = await api.get("/orders");
         setOrders(res.data);
-      } else {
+      } else if (activeTab === "products") {
         const res = await api.get("/products");
         setProducts(res.data);
-      }
+      } else if (activeTab === "settings") {
+  const settingsRes = await api.get("/settings");
+  setSettings(settingsRes.data);
+
+  const productsRes = await api.get("/products");
+  setProducts(productsRes.data);
+}
+
     } catch (err) {
       console.error(err);
     } finally {
@@ -118,6 +129,15 @@ const AdminDashboard = () => {
       toast.error(
         "Update failed: " + (err.response?.data?.message || err.message)
       );
+    }
+  };
+
+  const handleUpdateSettings = async () => {
+    try {
+      await api.post("/settings", settings);
+      toast.success("Settings updated successfully");
+    } catch (err) {
+      toast.error("Failed to update settings");
     }
   };
 
@@ -313,6 +333,19 @@ const AdminDashboard = () => {
         >
           Products
         </button>
+        <button
+          className={`btn ${
+            activeTab === "settings" ? "btn-primary" : "btn-outline"
+          }`}
+          onClick={() => setActiveTab("settings")}
+          style={{
+            flex: isMobile ? 1 : "none",
+            fontSize: isMobile ? "0.9rem" : "1rem",
+            padding: isMobile ? "0.5rem 1rem" : "0.75rem 1.5rem",
+          }}
+        >
+          Settings
+        </button>
       </div>
 
       {loading ? (
@@ -328,6 +361,38 @@ const AdminDashboard = () => {
         </div>
       ) : (
         <>
+        {activeTab === 'settings' && (
+                        <div className="card" style={{ padding: '2rem', maxWidth: '600px' }}>
+                            <h3 style={{ marginBottom: '1.5rem' }}>Global Settings</h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Inside Kathmandu Valley Delivery (NPR)</label>
+                                    <input
+                                        type="number"
+                                        className="input"
+                                        value={settings.deliveryInsideValley || ''}
+                                        onChange={e => setSettings({ ...settings, deliveryInsideValley: Number(e.target.value) })}
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Outside Valley Delivery (NPR)</label>
+                                    <input
+                                        type="number"
+                                        className="input"
+                                        value={settings.deliveryOutsideValley || ''}
+                                        onChange={e => setSettings({ ...settings, deliveryOutsideValley: Number(e.target.value) })}
+                                    />
+                                </div>
+                                <button
+                                    className="btn btn-primary"
+                                    onClick={handleUpdateSettings}
+                                    style={{ marginTop: '1rem' }}
+                                >
+                                    Save Settings
+                                </button>
+                            </div>
+                        </div>
+                    )}
           {activeTab === "orders" && (
             <div
               style={{
